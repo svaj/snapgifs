@@ -1,2 +1,2 @@
 # we depend on pysnap \o/
--e git://github.com/martinp/pysnap.git@e6b68a4d1672265853ed7c33309bf32a5efa7ad3#egg=pysnap
+-e git://github.com/martinp/pysnap.git@979b2f370a738eae3cbd3884a7eaf339bc0ec0c8#egg=pysnap
