@@ -59,11 +59,21 @@ if opts.recipients:
 
 
 def gif_to_snap(gif='', login='', password='', recips=''):
+    """
+    Turn a gif into a snap!
+    :param gif: the path to the gif file
+    :param login: snapchat login
+    :param password: password for snapchat
+    :param recips: comma delimited list of snapchat usernames to recieve this snap
+    :return:
+    """
+    # Convert to mp4 first
     mp4 = convert_to_mp4(gif)
     if len(mp4) <= 0:
         print "Whoa, we couldn't convert that gif to a video! BEEP BOOP ERRORS."
         return
 
+    # Log in to snapchat
     print "Logging into snapchat as " + login
     s = Snapchat()
     s.login(login, password)
@@ -71,16 +81,19 @@ def gif_to_snap(gif='', login='', password='', recips=''):
         print "Derp, invalid credentials, doofus."
         return
 
+    # Upload MP4 to snapchat
     media_id = s.upload(path=mp4)
     if media_id is None:
         print "Error while uploading to snapchattery"
         return
 
+    # Send that snap out!
     sent = s.send(media_id=media_id, recipients=recips,time=10)
     if sent:
         print "Wow it happened! you are so cool."
     else:
         print "Sorry, it failed sending... :("
+
 
 def convert_to_mp4(filepath=''):
     """
@@ -101,32 +114,15 @@ def convert_to_mp4(filepath=''):
         basename + '%05d.png'
     ])
 
-    # Guess at frame rate
-    # identify -format "Frame %s: %Tcs\n" ~/test.gif   - frame life in centiseconds - how odd.
-    frameratestr = subprocess.check_output([
-        'identify',
-        '-format',
-        '%T\n',
-        filepath
-    ])
-    if len(frameratestr) <= 0:
-        framerate = str(FRAME_RATE)
-    else:
-        # Get first frame's lifetime...
-        lifetime = frameratestr.split('\n', 1)[0]
-        # print "frame lifetime is " + lifetime + "cs"
-        framerate = str(float(lifetime))
-        if float(framerate) <= 0.0:
-            framerate = FRAME_RATE
-    print "Using frame rate of " + framerate
-
+    frame_rate = get_frame_rate(filepath)
+    print "Using frame rate of " + frame_rate
 
     # avconv -r 8 -i frame%02d.png -qscale 4 test.mp4
     # convert frames to avi
     subprocess.call([
         'avconv',
         '-r',
-        framerate,
+        frame_rate,
         '-i',
         basename + '%05d.png',
         '-qscale',
@@ -145,6 +141,38 @@ def convert_to_mp4(filepath=''):
     for fl in glob.glob(basename + '*png'):
         os.remove(fl)
     return basename + '.mp4'
+
+
+def get_frame_rate(gif=''):
+    """
+    Given a gif file, return the average frame rate in frames per second
+    :param gif: the gif to process
+    :return: frame rate in frames per second
+    """
+
+    # identify -format "Frame %s: %Tcs\n" ~/test.gif   - frame life in centiseconds - how very odd.
+    frame_rate_str = subprocess.check_output([
+        'identify',
+        '-format',
+        '%T\n',
+        gif
+    ])
+    # If we failed to get a frame lifetime from imagemagick...
+    if len(frame_rate_str) <= 0:
+        frame_rate = str(FRAME_RATE)
+    else:
+        # Get gif's lifetime...
+        frame_rate_list = frame_rate_str.split('\n')
+        frame_rate_list = [int(n) for n in frame_rate_list if n]
+        lifetime = float(sum(frame_rate_list)) / 100
+
+        # print "gif lifetime is " + str(lifetime) + "s"
+        # Determine average frames per second
+        frame_rate = str(len(frame_rate_list) / lifetime)
+        if float(frame_rate) <= 0.0:
+            frame_rate = FRAME_RATE
+
+    return frame_rate
 
 # Actually do the thing!
 gif_to_snap(gif=args[0], login=SNAPCHAT_LOGIN, password=SNAPCHAT_PASSWORD, recips=SNAPCHAT_RECIPIENTS)
