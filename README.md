@@ -11,7 +11,7 @@ Installing on Ubuntu 14.10:
 
 ```
 sudo apt-get install python-pip imagemagick libav-tools
-git clone git@github.com:svaj/snapgifs.git
+git clone https://github.com/svaj/snapgifs.git
 cd snapgifs
 pip install -r requirements.txt
 ```
@@ -21,7 +21,7 @@ Installing on OS X (please have brew already installed):
 ```
 sudo easy_install pip
 brew install libav imagemagick
-git clone git@github.com:svaj/snapgifs.git
+git clone https://github.com/svaj/snapgifs.git
 cd snapgifs
 pip install -r requirements.txt
 ```
